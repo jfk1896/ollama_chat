@@ -1,0 +1,13 @@
+[Unit]
+Description=Local browser chat for Ollama
+After=ollama.service
+Wants=ollama.service
+
+[Service]
+ExecStart=/usr/bin/python3 %h/git/ollama_chat/server.py
+WorkingDirectory=%h/git/ollama_chat
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

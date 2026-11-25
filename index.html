@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ollama chat</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --ink: #f3efe6;
+    --muted: #b7b0a4;
+    --line: #3c3934;
+    --paper: #1b1a17;
+    --card: #262420;
+    --think: #2c2a26;
+    --code: #141311;
+    --accent: #e0a15a;
+    --sans: "Ubuntu Sans", "Noto Sans", "Lato", sans-serif;
+    --mono: "Ubuntu Mono", "DejaVu Sans Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; overflow-anchor: none; }
+  body {
+    font: 20px/1.55 var(--sans);
+    color: var(--ink);
+    background: var(--paper);
+  }
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  header, .meter, form, main { width: min(1120px, calc(100% - 64px)); margin: 0 auto; }
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 0 10px;
+  }
+  .meter { padding: 0 0 12px; }
+  .meter-top, .timer, .compare {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 16px;
+    color: var(--muted);
+  }
+  .compare { color: var(--ink); min-height: 1.4em; }
+  .track {
+    height: 10px;
+    margin: 6px 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  #ctx-fill { height: 100%; width: 0; background: var(--accent); }
+  #ctx-fill.hot { background: #e07a5a; }
+  .meta { color: var(--muted); font-size: 15px; margin: 8px 0 0; }
+  h1 { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: 0; }
+  .tools { display: flex; gap: 14px; align-items: center; font-size: 16px; color: var(--muted); }
+  select, button, textarea { font: inherit; color: inherit; }
+  select, button {
+    font-size: 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 8px;
+  }
+  button { cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  label.think { display: flex; gap: 6px; align-items: center; }
+  main { padding-bottom: 16px; }
+  .note { color: var(--muted); font-size: 16px; margin: 8px 0 18px; }
+  article { margin: 0 0 18px; }
+  article.user {
+    width: min(72%, 38rem);
+    margin-left: auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 14px 12px;
+  }
+  article.user .who { text-align: right; }
+  .who { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .body p { margin: 0 0 0.7em; }
+  .body p:last-child { margin-bottom: 0; }
+  .body ul, .body ol { margin: 0.3em 0 0.7em; padding-left: 1.3em; }
+  .body pre {
+    background: var(--code);
+    border-radius: 8px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: var(--mono);
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  .body code {
+    font-family: var(--mono);
+    font-size: 0.92em;
+    background: var(--code);
+    padding: 0 0.2em;
+    border-radius: 4px;
+  }
+  .body pre code { background: none; padding: 0; }
+  details.think {
+    background: var(--think);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #d9d3c7;
+  }
+  details.think summary { cursor: pointer; color: var(--muted); }
+  details.think .think-body {
+    white-space: pre-wrap;
+    margin-top: 8px;
+    max-height: 10rem;
+    overflow-y: auto;
+    overflow-anchor: none;
+  }
+  form {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    gap: 8px;
+    padding: 12px 0 16px;
+    background: linear-gradient(var(--paper), var(--paper) 70%);
+  }
+  textarea {
+    flex: 1;
+    min-height: 52px;
+    max-height: 180px;
+    resize: vertical;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: var(--card);
+    font-size: 18px;
+  }
+  form button { align-self: end; padding: 10px 14px; }
+  .err { color: #f0a8a8; }
+</style>
+</head>
+<body>
+<div class="top">
+<header>
+  <h1>Ollama chat</h1>
+  <div class="tools">
+    <select id="model" aria-label="Model"></select>
+    <label class="think"><input id="thinking" type="checkbox" checked> Thinking</label>
+    <button id="clear" type="button">New chat</button>
+  </div>
+</header>
+<div class="meter">
+  <div class="meter-top">
+    <span id="ctx-label">Context</span>
+    <span id="ctx-nums">0 used · 8,192 left</span>
+  </div>
+  <div class="track" id="ctx-meter" role="meter" aria-label="Context used" aria-valuemin="0" aria-valuemax="8192" aria-valuenow="0">
+    <div id="ctx-fill"></div>
+  </div>
+  <div class="timer" id="timer">Ready</div>
+  <div class="compare" id="compare"></div>
+</div>
+</div>
+<main id="log">
+  <p class="note">This page talks only to Ollama on this computer. The first reply after a model has been idle waits while the weights are read from disk.</p>
+</main>
+<form id="ask">
+  <textarea id="text" rows="2" placeholder="Ask a question" autofocus></textarea>
+  <button id="send" type="submit">Send</button>
+</form>
+<script>
+const log = document.getElementById("log");
+const form = document.getElementById("ask");
+const text = document.getElementById("text");
+const send = document.getElementById("send");
+const modelSelect = document.getElementById("model");
+const thinkingBox = document.getElementById("thinking");
+const messages = [];
+const ctxLabel = document.getElementById("ctx-label");
+const ctxNums = document.getElementById("ctx-nums");
+const ctxMeter = document.getElementById("ctx-meter");
+const ctxFill = document.getElementById("ctx-fill");
+const timerEl = document.getElementById("timer");
+const compareEl = document.getElementById("compare");
+const lastTimes = {};
+let controller = null;
+let chatGen = 0;
+let contextLimit = 8192;
+let contextUsed = 0;
+let timerHandle = 0;
+let timerStarted = 0;
+let followOutput = true;
+let scrollFromPage = false;
+
+function pageIsNearBottom() {
+  const el = document.documentElement;
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+}
+
+function editingField(event) {
+  const el = event.target;
+  if (!el || !el.tagName) return false;
+  const tag = el.tagName;
+  return tag === "TEXTAREA" || tag === "INPUT" || tag === "SELECT" || el.isContentEditable;
+}
+
+function releasePageFollow() {
+  followOutput = false;
+  if (document.activeElement === text) text.blur();
+}
+
+function scrollPageToEnd() {
+  if (!followOutput) return;
+  scrollFromPage = true;
+  window.scrollTo(0, document.documentElement.scrollHeight);
+  scrollFromPage = false;
+}
+
+window.addEventListener("wheel", (event) => {
+  if (event.deltaY < 0 && !editingField(event)) releasePageFollow();
+}, { passive: true });
+window.addEventListener("keydown", (event) => {
+  if (editingField(event)) return;
+  if (event.key === "Home" || event.key === "PageUp" || event.key === "ArrowUp") releasePageFollow();
+});
+window.addEventListener("scroll", () => {
+  if (scrollFromPage) return;
+  followOutput = pageIsNearBottom();
+  if (!followOutput && document.activeElement === text) text.blur();
+}, { passive: true });
+
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function inlineMarkdown(s) {
+  return s
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+}
+
+function renderMarkdown(src) {
+  const fences = [];
+  const stripped = src.replace(/```[^\n]*\n?([\s\S]*?)```/g, (_, code) => {
+    fences.push("<pre><code>" + escapeHtml(code.replace(/\n$/, "")) + "</code></pre>");
+    return "\n@@FENCE" + (fences.length - 1) + "@@\n";
+  });
+  const lines = escapeHtml(stripped).split("\n");
+  let html = "";
+  let list = "";
+  let para = [];
+  const flushPara = () => {
+    if (!para.length) return;
+    html += "<p>" + inlineMarkdown(para.join(" ")) + "</p>";
+    para = [];
+  };
+  const flushList = () => {
+    if (!list) return;
+    html += list + "</ul>";
+    list = "";
+  };
+  for (const line of lines) {
+    const fence = line.match(/^@@FENCE(\d+)@@$/);
+    if (fence) {
+      flushPara(); flushList();
+      html += fences[Number(fence[1])];
+      continue;
+    }
+    if (/^\s*[-*]\s+/.test(line)) {
+      flushPara();
+      if (!list) list = "<ul>";
+      list += "<li>" + inlineMarkdown(line.replace(/^\s*[-*]\s+/, "")) + "</li>";
+      continue;
+    }
+    flushList();
+    if (/^#{1,3}\s+/.test(line)) {
+      flushPara();
+      html += "<p><strong>" + inlineMarkdown(line.replace(/^#{1,3}\s+/, "")) + "</strong></p>";
+      continue;
+    }
+    if (line.trim() === "") flushPara();
+    else para.push(line);
+  }
+  flushPara(); flushList();
+  return html;
+}
+
+function addArticle(who, cls) {
+  const article = document.createElement("article");
+  article.innerHTML = '<div class="who"></div><div class="body"></div>';
+  article.querySelector(".who").textContent = who;
+  article.className = cls || "";
+  log.appendChild(article);
+  return article.querySelector(".body");
+}
+
+function formatDuration(ms) {
+  if (ms < 60000) return (ms / 1000).toFixed(1) + "s";
+  const total = Math.round(ms / 1000);
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return minutes + "m " + String(seconds).padStart(2, "0") + "s";
+}
+
+function renderMeter() {
+  const used = contextUsed;
+  const limit = contextLimit || 8192;
+  const left = Math.max(0, limit - used);
+  const pct = limit ? Math.min(100, (used / limit) * 100) : 0;
+  ctxLabel.textContent = "Context " + limit.toLocaleString();
+  ctxNums.textContent = used.toLocaleString() + " used · " + left.toLocaleString() + " left";
+  ctxFill.style.width = pct + "%";
+  ctxFill.classList.toggle("hot", pct >= 90);
+  ctxMeter.setAttribute("aria-valuemax", String(limit));
+  ctxMeter.setAttribute("aria-valuenow", String(Math.min(used, limit)));
+}
+
+function startTimer(modelName) {
+  timerStarted = performance.now();
+  const tick = () => {
+    timerEl.textContent = modelName + " answering · " + formatDuration(performance.now() - timerStarted);
+  };
+  tick();
+  timerHandle = setInterval(tick, 100);
+}
+
+function renderCompare() {
+  const names = Object.keys(lastTimes);
+  compareEl.textContent = names.map((name) => name + " " + lastTimes[name]).join("   ·   ");
+}
+
+function stopTimer() {
+  if (!timerHandle) return 0;
+  clearInterval(timerHandle);
+  timerHandle = 0;
+  return performance.now() - timerStarted;
+}
+
+async function loadContextLimit() {
+  try {
+    const resp = await fetch("/api/ps");
+    const data = await resp.json();
+    const running = data.models || [];
+    const match = running.find(m => m.name === modelSelect.value || m.model === modelSelect.value);
+    const row = match || running[0];
+    const limit = row && row.context_length;
+    if (limit) contextLimit = limit;
+  } catch (err) {
+    /* The server default is 8192 when no model is loaded yet. */
+  }
+  renderMeter();
+}
+
+async function loadModels() {
+  const resp = await fetch("/api/tags");
+  const data = await resp.json();
+  const names = (data.models || []).map(m => m.name);
+  const prefer = names.includes("qwen3.5:4b") ? "qwen3.5:4b" : "qwen3.5:2b";
+  modelSelect.innerHTML = "";
+  for (const name of names) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    if (name === prefer) opt.selected = true;
+    modelSelect.appendChild(opt);
+  }
+  if (!names.length) {
+    const opt = document.createElement("option");
+    opt.textContent = "No models installed";
+    modelSelect.appendChild(opt);
+  }
+}
+
+function takeStats(msg) {
+  if (!msg.done) return null;
+  const promptTokens = msg.prompt_eval_count || 0;
+  const generated = msg.eval_count || 0;
+  if (!promptTokens && !generated) return null;
+  return {
+    promptTokens: promptTokens,
+    generated: generated,
+    used: promptTokens + generated,
+    hitLimit: msg.done_reason === "length"
+  };
+}
+
+async function ask(prompt) {
+  const gen = chatGen;
+  const modelName = modelSelect.value;
+  messages.push({ role: "user", content: prompt });
+  const userBody = addArticle("You", "user");
+  userBody.innerHTML = renderMarkdown(prompt);
+
+  const body = addArticle(modelName);
+  const thinkEl = document.createElement("details");
+  thinkEl.className = "think";
+  thinkEl.open = true;
+  thinkEl.innerHTML = '<summary>Thinking</summary><div class="think-body"></div>';
+  const thinkBody = thinkEl.querySelector(".think-body");
+  const answerEl = document.createElement("div");
+  answerEl.className = "answer";
+  body.append(thinkEl, answerEl);
+  thinkEl.hidden = true;
+
+  send.textContent = "Stop";
+  controller = new AbortController();
+  followOutput = true;
+  scrollPageToEnd();
+  startTimer(modelName);
+  let thinking = "";
+  let answer = "";
+  let stats = null;
+  let status = "done";
+  let followThink = true;
+  let scrollFromThink = false;
+  thinkBody.addEventListener("wheel", (event) => {
+    if (event.deltaY < 0) followThink = false;
+  }, { passive: true });
+  thinkBody.addEventListener("scroll", () => {
+    if (scrollFromThink) return;
+    const gap = thinkBody.scrollHeight - thinkBody.scrollTop - thinkBody.clientHeight;
+    followThink = gap < 24;
+  }, { passive: true });
+  const applyLine = (line) => {
+    if (!line.trim()) return;
+    const msg = JSON.parse(line);
+    if (msg.error) throw new Error(msg.error);
+    const part = msg.message || {};
+    if (part.thinking) {
+      thinking += part.thinking;
+      thinkEl.hidden = false;
+      const stick = followThink;
+      thinkBody.textContent = thinking;
+      if (stick) {
+        scrollFromThink = true;
+        thinkBody.scrollTop = thinkBody.scrollHeight;
+        scrollFromThink = false;
+      }
+    }
+    if (part.content) {
+      answer += part.content;
+      answerEl.innerHTML = renderMarkdown(answer);
+      scrollPageToEnd();
+    }
+    const next = takeStats(msg);
+    if (next) stats = next;
+  };
+  try {
+    const resp = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: modelName,
+        messages: messages,
+        stream: true,
+        think: thinkingBox.checked
+      })
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop();
+      for (const line of lines) applyLine(line);
+    }
+    buf += decoder.decode();
+    if (buf.trim()) applyLine(buf);
+    messages.push({ role: "assistant", content: answer });
+  } catch (err) {
+    status = err.name === "AbortError" ? "stopped" : "error";
+    if (status === "error") {
+      const p = document.createElement("p");
+      p.className = "err";
+      p.textContent = err.message || String(err);
+      body.appendChild(p);
+    }
+    if (answer) messages.push({ role: "assistant", content: answer });
+    else messages.pop();
+  } finally {
+    const elapsed = stopTimer();
+    send.textContent = "Send";
+    if (gen !== chatGen) {
+      controller = null;
+      return;
+    }
+    controller = null;
+    if (followOutput) text.focus({ preventScroll: true });
+    if (stats) {
+      contextUsed = stats.used;
+      await loadContextLimit();
+      if (gen !== chatGen) return;
+    }
+    const timeText = formatDuration(elapsed);
+    if (status === "stopped") timerEl.textContent = "Stopped at " + timeText;
+    else if (status === "error") timerEl.textContent = modelName + " failed at " + timeText;
+    else {
+      timerEl.textContent = modelName + " answered in " + timeText;
+      lastTimes[modelName] = timeText;
+      renderCompare();
+    }
+    if (status !== "stopped" || stats) {
+      const meta = document.createElement("p");
+      meta.className = "meta";
+      if (stats) {
+        const left = Math.max(0, contextLimit - stats.used);
+        meta.textContent = modelName + " · " + timeText
+          + " · prompt " + stats.promptTokens.toLocaleString()
+          + " · generated " + stats.generated.toLocaleString()
+          + " · " + stats.used.toLocaleString() + " of " + contextLimit.toLocaleString()
+          + " · " + left.toLocaleString() + " left"
+          + (stats.hitLimit ? " · hit the context limit" : "");
+      } else {
+        meta.textContent = modelName + " · " + timeText;
+      }
+      body.appendChild(meta);
+      scrollPageToEnd();
+    }
+  }
+}
+
+form.addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  if (controller) {
+    controller.abort();
+    return;
+  }
+  const prompt = text.value.trim();
+  if (!prompt) return;
+  text.value = "";
+  ask(prompt);
+});
+
+text.addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter" && !ev.shiftKey) {
+    ev.preventDefault();
+    form.requestSubmit();
+  }
+});
+
+document.getElementById("clear").addEventListener("click", () => {
+  const wasRunning = !!controller;
+  chatGen++;
+  if (controller) controller.abort();
+  messages.length = 0;
+  contextUsed = 0;
+  renderMeter();
+  if (wasRunning) timerEl.textContent = "Ready";
+  log.innerHTML = '<p class="note">New chat. Earlier messages are no longer sent with the next question.</p>';
+  text.focus({ preventScroll: true });
+});
+
+renderMeter();
+loadContextLimit();
+loadModels().catch((err) => {
+  log.insertAdjacentHTML("beforeend", '<p class="err"></p>');
+  log.lastElementChild.textContent = "Could not reach Ollama. " + err.message;
+});
+</script>
+</body>
+</html>
