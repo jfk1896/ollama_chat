@@ -9,11 +9,14 @@ It was used with Ollama 0.40.16 and the official tags `qwen3.5:4b` and `qwen3.5:
 ## What the page does
 
 - The model list comes from Ollama. It selects `qwen3.5:4b` when that tag is installed, otherwise `qwen3.5:2b`.
-- Thinking is a checkbox. These two models accept only on or off, and they default to on. The page sends `think: true` or `think: false`.
+- Thinking is a checkbox and starts unchecked. These two models accept only on or off. The page sends `think: false` until you turn the box on.
+- Streaming is a checkbox and starts unchecked. Off waits for the finished reply. On shows the reply as it is written. The model does the same work either way.
 - A gauge shows tokens used and tokens left against the context length Ollama reports for the loaded model. The numbers start at 8,192 until a model is loaded. The bar turns orange at 90%.
 - A timer runs from Send until the reply finishes. A comparison line keeps the latest finished time for each model across New chat.
-- New chat clears the conversation that will be sent with the next question. It leaves the comparison line as it is.
+- New chat asks whether to save the conversation before clearing it. The suggested name is the first few words of the question, and you can edit it. Saved chats are listed on the left and can be opened again. Don't save starts a new chat and leaves an earlier saved copy unchanged.
+- A refresh keeps the open conversation and the saved list in this browser.
 - The page follows the end of a reply while you are already there. Scrolling up leaves the view where you put it.
+- A fenced code block shows the language at the top left and colours keywords, strings, comments, and numbers. Copy stays at the top right. Inline code stays plain.
 
 With Thinking unchecked, Ollama does not open a separate thinking trace. The model can still write a long step-by-step answer in the reply itself.
 

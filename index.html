@@ -72,7 +72,7 @@
   }
   button { cursor: pointer; }
   button:disabled { opacity: 0.5; cursor: default; }
-  label.think { display: flex; gap: 6px; align-items: center; }
+  .tools label { display: flex; gap: 6px; align-items: center; }
   main { padding-bottom: 16px; }
   .note { color: var(--muted); font-size: 16px; margin: 8px 0 18px; }
   article { margin: 0 0 18px; }
@@ -90,9 +90,10 @@
   .body p:last-child { margin-bottom: 0; }
   .body ul, .body ol { margin: 0.3em 0 0.7em; padding-left: 1.3em; }
   .body pre {
+    position: relative;
     background: var(--code);
     border-radius: 8px;
-    padding: 10px 12px;
+    padding: 2.4rem 12px 10px;
     overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-word;
@@ -100,6 +101,39 @@
     font-size: 16px;
     line-height: 1.45;
   }
+  .body pre .copy-code {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font: 14px/1 var(--sans);
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 5px 8px;
+  }
+  .body pre .copy-code.done { color: var(--accent); }
+  .body pre .lang {
+    position: absolute;
+    top: 9px;
+    left: 12px;
+    font: 13px/1 var(--sans);
+    color: var(--muted);
+    pointer-events: none;
+    user-select: none;
+  }
+  .body pre .tok-comment { color: #8a8175; }
+  .body pre .tok-string { color: #ce9178; }
+  .body pre .tok-number { color: #b5cea8; }
+  .body pre .tok-keyword { color: #c586c0; }
+  .body pre .tok-builtin,
+  .body pre .tok-function { color: #dcdcaa; }
+  .body pre .tok-type { color: #4ec9b0; }
+  .body pre .tok-attr { color: #9cdcfe; }
+  .body pre .tok-tag,
+  .body pre .tok-meta { color: #569cd6; }
+  .body pre .tok-add { color: #8fce8f; }
+  .body pre .tok-del { color: #f14c4c; }
   .body code {
     font-family: var(--mono);
     font-size: 0.92em;
@@ -107,7 +141,7 @@
     padding: 0 0.2em;
     border-radius: 4px;
   }
-  .body pre code { background: none; padding: 0; }
+  .body pre code { background: none; padding: 0; color: var(--ink); }
   details.think {
     background: var(--think);
     border-radius: 8px;
@@ -145,15 +179,118 @@
   }
   form button { align-self: end; padding: 10px 14px; }
   .err { color: #f0a8a8; }
+  body { display: flex; align-items: flex-start; }
+  .history {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    width: 348px;
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-right: 1px solid var(--line);
+    padding: 16px 10px 24px;
+    background: #151411;
+  }
+  .history h2 {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .history-empty { margin: 0; color: var(--muted); font-size: 15px; }
+  .history ul { list-style: none; margin: 0; padding: 0; }
+  .history li { display: flex; gap: 4px; align-items: stretch; margin: 0 0 6px; }
+  .history-open {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    background: transparent;
+    border-color: transparent;
+    padding: 8px;
+  }
+  .history-open:hover,
+  .history-open.current { background: var(--card); border-color: var(--line); }
+  .history-name {
+    display: block;
+    font-size: 15px;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .history-when { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+  .history-delete {
+    flex: none;
+    align-self: center;
+    font-size: 13px;
+    padding: 4px 6px;
+    color: var(--muted);
+    background: transparent;
+  }
+  .stage { flex: 1; min-width: 0; margin-left: 348px; }
+  .save-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.45);
+  }
+  .save-dialog[hidden] { display: none; }
+  .save-card {
+    display: block;
+    position: static;
+    width: min(880px, calc(100vw - 48px));
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 28px 32px;
+  }
+  .save-card p { margin: 0 0 18px; font-size: 20px; line-height: 1.45; }
+  .save-card label { display: block; font-size: 16px; color: var(--muted); }
+  .save-card input {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    font: 20px/1.4 var(--sans);
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .save-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 22px;
+  }
+  .save-actions button { flex: none; white-space: nowrap; padding: 10px 18px; font-size: 18px; }
 </style>
 </head>
 <body>
+<aside class="history" aria-label="Saved chats">
+  <h2>History</h2>
+  <p class="history-empty" id="history-empty">No saved chats yet.</p>
+  <ul id="history-list"></ul>
+</aside>
+<div class="stage">
 <div class="top">
 <header>
   <h1>Ollama chat</h1>
   <div class="tools">
     <select id="model" aria-label="Model"></select>
-    <label class="think"><input id="thinking" type="checkbox" checked> Thinking</label>
+    <label class="think"><input id="thinking" type="checkbox"> Thinking</label>
+    <label><input id="streaming" type="checkbox"> Streaming</label>
     <button id="clear" type="button">New chat</button>
   </div>
 </header>
@@ -176,6 +313,20 @@
   <textarea id="text" rows="2" placeholder="Ask a question" autofocus></textarea>
   <button id="send" type="submit">Send</button>
 </form>
+</div>
+<div id="save-dialog" class="save-dialog" hidden>
+  <form id="save-form" class="save-card">
+    <p id="save-lead">Save this chat?</p>
+    <label>Name
+      <input id="save-name" maxlength="48" autocomplete="off" aria-label="Chat name">
+    </label>
+    <div class="save-actions">
+      <button type="button" id="save-cancel">Cancel</button>
+      <button type="button" id="save-skip">Don't save</button>
+      <button type="submit" id="save-keep">Save</button>
+    </div>
+  </form>
+</div>
 <script>
 const log = document.getElementById("log");
 const form = document.getElementById("ask");
@@ -183,6 +334,7 @@ const text = document.getElementById("text");
 const send = document.getElementById("send");
 const modelSelect = document.getElementById("model");
 const thinkingBox = document.getElementById("thinking");
+const streamingBox = document.getElementById("streaming");
 const messages = [];
 const ctxLabel = document.getElementById("ctx-label");
 const ctxNums = document.getElementById("ctx-nums");
@@ -190,7 +342,18 @@ const ctxMeter = document.getElementById("ctx-meter");
 const ctxFill = document.getElementById("ctx-fill");
 const timerEl = document.getElementById("timer");
 const compareEl = document.getElementById("compare");
+const historyList = document.getElementById("history-list");
+const historyEmpty = document.getElementById("history-empty");
+const saveDialog = document.getElementById("save-dialog");
+const saveLead = document.getElementById("save-lead");
+const saveName = document.getElementById("save-name");
 const lastTimes = {};
+let savedModel = "";
+let saveTimer = 0;
+let activeId = "";
+let savedFingerprint = "[]";
+let history = [];
+let pendingLeave = null;
 let controller = null;
 let chatGen = 0;
 let contextLimit = 8192;
@@ -241,6 +404,287 @@ function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+
+const STR_DQ = '"(?:\\\\.|[^"\\\\])*"';
+const STR_SQ = "'(?:\\\\.|[^'\\\\])*'";
+const STR_TQ = '"""[\\s\\S]*?"""|\'\'\'[\\s\\S]*?\'\'\'';
+const STR_BT = "`[^`]*`";
+const STR_PY = "(?:[rRfFbBuU]{1,2})?(?:" + STR_TQ + "|" + STR_DQ + "|" + STR_SQ + ")";
+const NUM = "\\b0[xX][0-9A-Fa-f]+\\b|\\b\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d+)?\\b";
+const HASH = "#[^\\n]*";
+const SLASH = "//[^\\n]*";
+const BLOCK = "/\\*[\\s\\S]*?\\*/";
+const FUNC = "\\b[A-Za-z_]\\w*\\b(?=\\s*\\()";
+const TYPE = "\\b[A-Z]\\w*\\b";
+const DECOR = "@[A-Za-z_]\\w*";
+
+function words(list) {
+  return "\\b(?:" + list.join("|") + ")\\b";
+}
+
+const PY_KW = "False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield".split(" ");
+const PY_BI = "print len range int str float list dict set tuple bool open super isinstance enumerate zip map filter abs sum min max round sorted reversed any all".split(" ");
+const JS_KW = "break case catch class const continue debugger default delete do else export extends finally for function if import in instanceof let new return static super switch this throw try typeof var void while with yield await async of".split(" ");
+const TS_KW = JS_KW.concat("interface type public private protected implements enum declare namespace abstract readonly override as".split(" "));
+const JS_BI = "console document window Math JSON Object Array String Number Boolean Promise Map Set Date Error parseInt parseFloat setTimeout fetch".split(" ");
+const C_KW = "auto break case char const continue default do double else enum extern float for goto if inline int long register return short signed sizeof static struct switch typedef union unsigned void volatile while class namespace template typename public private protected virtual using new delete this try catch throw friend explicit constexpr nullptr bool wchar_t operator".split(" ");
+const GO_KW = "break case chan const continue default defer else fallthrough for func go goto if import interface map package range return select struct switch type var".split(" ");
+const GO_BI = "append cap close complex copy delete imag len make new panic print println real recover".split(" ");
+const RS_KW = "as async await break const continue crate dyn else enum extern false fn for if impl in let loop match mod move mut pub ref return self Self static struct super trait true type unsafe use where while".split(" ");
+const SH_KW = "if then else elif fi for while until do done case esac function select return exit echo cd export source local set unset shift trap read printf eval exec".split(" ");
+const SQL_KW = "select from where and or not insert into values update set delete create table drop alter join left right inner outer on as group by order limit offset having union all distinct is null like between exists case when then else end primary key foreign references index view with asc desc count sum avg min max".split(" ");
+const RB_KW = "alias and begin break case class def defined do else elsif end ensure false for if in module next nil not or redo rescue retry return self super then true undef unless until when while yield".split(" ");
+const PHP_KW = "function class public private protected static return if else elseif foreach for while do switch case break continue new echo print array as extends implements interface namespace use try catch finally throw true false null".split(" ");
+
+const ALIAS = {
+  py: "python", python3: "python",
+  js: "javascript", jsx: "javascript", node: "javascript", mjs: "javascript", cjs: "javascript",
+  ts: "typescript", tsx: "typescript",
+  sh: "bash", shell: "bash", zsh: "bash", console: "bash", bash: "bash",
+  yml: "yaml",
+  md: "markdown",
+  htm: "html", xhtml: "html", xml: "html", svg: "html",
+  cc: "cpp", cxx: "cpp", hpp: "cpp", hh: "cpp", h: "cpp", c: "cpp", "c++": "cpp", "c#": "cpp",
+  golang: "go", rs: "rust",
+  rb: "ruby",
+  plaintext: "plain", text: "plain", txt: "plain",
+  jsonc: "json",
+  dockerfile: "bash",
+  kt: "cpp", kotlin: "cpp", java: "cpp", cs: "cpp", csharp: "cpp", swift: "cpp"
+};
+
+function kindOf(lang) {
+  if (!lang) return "generic";
+  return ALIAS[lang] || lang;
+}
+
+function rule(src, cls, flags) {
+  return { src: src, cls: cls, flags: flags || "" };
+}
+
+function cLike(kw, extra) {
+  return [
+    rule(BLOCK, "comment"),
+    rule(SLASH, "comment"),
+    rule(STR_DQ, "string"),
+    rule(STR_SQ, "string"),
+    rule(NUM, "number"),
+    rule(words(kw), "keyword"),
+    rule(FUNC, "function"),
+    rule(TYPE, "type")
+  ].concat(extra || []);
+}
+
+function buildRules(kind) {
+  switch (kind) {
+    case "plain":
+      return [];
+    case "python":
+      return [
+        rule(STR_PY, "string"),
+        rule(HASH, "comment"),
+        rule(DECOR, "meta"),
+        rule(NUM, "number"),
+        rule(words(PY_KW), "keyword"),
+        rule(words(PY_BI), "builtin"),
+        rule(FUNC, "function"),
+        rule(TYPE, "type")
+      ];
+    case "javascript":
+      return [
+        rule(BLOCK, "comment"),
+        rule(SLASH, "comment"),
+        rule(STR_BT, "string"),
+        rule(STR_DQ, "string"),
+        rule(STR_SQ, "string"),
+        rule(NUM, "number"),
+        rule(words(JS_KW), "keyword"),
+        rule(words(JS_BI), "builtin"),
+        rule(FUNC, "function"),
+        rule(TYPE, "type")
+      ];
+    case "typescript":
+      return [
+        rule(BLOCK, "comment"),
+        rule(SLASH, "comment"),
+        rule(STR_BT, "string"),
+        rule(STR_DQ, "string"),
+        rule(STR_SQ, "string"),
+        rule(NUM, "number"),
+        rule(words(TS_KW), "keyword"),
+        rule(words(JS_BI), "builtin"),
+        rule(FUNC, "function"),
+        rule(TYPE, "type")
+      ];
+    case "cpp":
+      return [rule("^\\s*#\\s*\\w+[^\\n]*", "meta", "m")].concat(cLike(C_KW));
+    case "go":
+      return [
+        rule(BLOCK, "comment"),
+        rule(SLASH, "comment"),
+        rule(STR_BT, "string"),
+        rule(STR_DQ, "string"),
+        rule(NUM, "number"),
+        rule(words(GO_KW), "keyword"),
+        rule(words(GO_BI), "builtin"),
+        rule(FUNC, "function"),
+        rule(TYPE, "type")
+      ];
+    case "rust":
+      return [
+        rule(BLOCK, "comment"),
+        rule(SLASH, "comment"),
+        rule(STR_DQ, "string"),
+        rule("'\\\\?.'", "string"),
+        rule(NUM, "number"),
+        rule(words(RS_KW), "keyword"),
+        rule(FUNC, "function"),
+        rule(TYPE, "type")
+      ];
+    case "bash":
+      return [
+        rule("^#![^\\n]*", "meta", "m"),
+        rule(HASH, "comment"),
+        rule(STR_DQ, "string"),
+        rule(STR_SQ, "string"),
+        rule("\\$\\{[^}]+\\}|\\$[A-Za-z_]\\w*|\\$[0-9#@*?!-]", "attr"),
+        rule(NUM, "number"),
+        rule(words(SH_KW), "keyword"),
+        rule(FUNC, "function")
+      ];
+    case "sql":
+      return [
+        rule(BLOCK, "comment"),
+        rule("--[^\\n]*", "comment"),
+        rule(STR_SQ, "string"),
+        rule(STR_DQ, "string"),
+        rule(NUM, "number"),
+        rule(words(SQL_KW), "keyword", "i"),
+        rule(FUNC, "function")
+      ];
+    case "json":
+      return [
+        rule(STR_DQ + "\\s*:", "attr"),
+        rule(STR_DQ, "string"),
+        rule("\\b(?:true|false|null)\\b", "keyword"),
+        rule(NUM, "number")
+      ];
+    case "html":
+      return [
+        rule("<!--[\\s\\S]*?-->", "comment"),
+        rule("<!DOCTYPE[^>]*>", "meta"),
+        rule("</?[A-Za-z][\\w:-]*", "tag"),
+        rule("/?>", "tag"),
+        rule("\\b[A-Za-z_:][-\\w:.]*\\s*(?==)", "attr"),
+        rule(STR_DQ, "string"),
+        rule(STR_SQ, "string")
+      ];
+    case "css":
+      return [
+        rule(BLOCK, "comment"),
+        rule(STR_DQ, "string"),
+        rule(STR_SQ, "string"),
+        rule("#[0-9A-Fa-f]{3,8}\\b", "number"),
+        rule(NUM, "number"),
+        rule("\\b[a-z-]+(?=\\s*:)", "attr"),
+        rule("\\b(?:important|from|to|infinite|linear|ease|ease-in|ease-out)\\b", "keyword")
+      ];
+    case "yaml":
+      return [
+        rule(HASH, "comment"),
+        rule(STR_DQ, "string"),
+        rule(STR_SQ, "string"),
+        rule("^(?:[ \\t-]*)[A-Za-z_][\\w-]*(?=\\s*:)", "attr", "m"),
+        rule("\\b(?:true|false|null|yes|no)\\b", "keyword"),
+        rule(NUM, "number")
+      ];
+    case "ruby":
+      return [
+        rule(STR_PY, "string"),
+        rule(HASH, "comment"),
+        rule(NUM, "number"),
+        rule(words(RB_KW), "keyword"),
+        rule(FUNC, "function"),
+        rule(TYPE, "type")
+      ];
+    case "php":
+      return [
+        rule(BLOCK, "comment"),
+        rule(SLASH, "comment"),
+        rule(HASH, "comment"),
+        rule(STR_DQ, "string"),
+        rule(STR_SQ, "string"),
+        rule("\\$[A-Za-z_]\\w*", "attr"),
+        rule(NUM, "number"),
+        rule(words(PHP_KW), "keyword"),
+        rule(FUNC, "function")
+      ];
+    case "diff":
+      return [
+        rule("^\\+[^\n]*", "add", "m"),
+        rule("^-[^\n]*", "del", "m"),
+        rule("^@@[^\n]*", "meta", "m")
+      ];
+    case "markdown":
+      return [
+        rule("^#{1,6}[^\\n]*", "keyword", "m"),
+        rule("`[^`]+`", "string"),
+        rule("\\[[^\\]]+\\]\\([^)]+\\)", "attr")
+      ];
+    default:
+      return [
+        rule(BLOCK, "comment"),
+        rule(SLASH, "comment"),
+        rule(STR_DQ, "string"),
+        rule(STR_SQ, "string"),
+        rule(STR_BT, "string"),
+        rule(NUM, "number")
+      ];
+  }
+}
+
+const ruleCache = {};
+function rulesFor(kind) {
+  if (!ruleCache[kind]) {
+    ruleCache[kind] = buildRules(kind).map((item) => ({
+      re: new RegExp(item.src, "y" + item.flags),
+      cls: item.cls
+    }));
+  }
+  return ruleCache[kind];
+}
+
+function highlightCode(code, lang) {
+  const rules = rulesFor(kindOf(lang));
+  if (!rules.length) return escapeHtml(code);
+  let i = 0;
+  let out = "";
+  while (i < code.length) {
+    let found = false;
+    for (let r = 0; r < rules.length; r++) {
+      const re = rules[r].re;
+      re.lastIndex = i;
+      const m = re.exec(code);
+      if (m) {
+        out += '<span class="tok-' + rules[r].cls + '">' + escapeHtml(m[0]) + "</span>";
+        i = re.lastIndex;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      out += escapeHtml(code.charAt(i));
+      i += 1;
+    }
+  }
+  return out;
+}
+
+function fenceLang(raw) {
+  const word = (raw || "").trim().split(/\s+/)[0] || "";
+  return word.replace(/^language-/, "").replace(/[^A-Za-z0-9_+#-]/g, "").toLowerCase();
+}
+
 function inlineMarkdown(s) {
   return s
     .replace(/`([^`]+)`/g, "<code>$1</code>")
@@ -250,8 +694,11 @@ function inlineMarkdown(s) {
 
 function renderMarkdown(src) {
   const fences = [];
-  const stripped = src.replace(/```[^\n]*\n?([\s\S]*?)```/g, (_, code) => {
-    fences.push("<pre><code>" + escapeHtml(code.replace(/\n$/, "")) + "</code></pre>");
+  const stripped = src.replace(/```([^\n]*)\n?([\s\S]*?)```/g, (_, info, code) => {
+    const lang = fenceLang(info);
+    const body = code.replace(/\n$/, "");
+    const label = lang ? '<span class="lang">' + escapeHtml(ALIAS[lang] || lang) + "</span>" : "";
+    fences.push('<pre class="codebox"><button type="button" class="copy-code">Copy</button>' + label + "<code>" + highlightCode(body, lang) + "</code></pre>");
     return "\n@@FENCE" + (fences.length - 1) + "@@\n";
   });
   const lines = escapeHtml(stripped).split("\n");
@@ -301,6 +748,368 @@ function addArticle(who, cls) {
   article.className = cls || "";
   log.appendChild(article);
   return article.querySelector(".body");
+}
+
+function chatPayload() {
+  return messages
+    .filter((msg) => msg.content && (msg.role === "user" || msg.role === "assistant"))
+    .map((msg) => ({ role: msg.role, content: msg.content }));
+}
+
+function saveChat() {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = 0;
+  }
+  const data = {
+    messages: messages.map((msg) => ({
+      role: msg.role,
+      content: msg.content || "",
+      model: msg.model || "",
+      thinking: msg.thinking || "",
+      meta: msg.meta || "",
+      error: msg.error || ""
+    })),
+    contextUsed: contextUsed,
+    contextLimit: contextLimit,
+    model: modelSelect.value || savedModel,
+    timer: timerEl.textContent,
+    lastTimes: lastTimes,
+    activeId: activeId
+  };
+  try {
+    localStorage.setItem("ollama-chat", JSON.stringify(data));
+  } catch (err) {
+    /* The chat still works for this page load when storage is full or blocked. */
+  }
+}
+
+function saveChatSoon() {
+  if (saveTimer) return;
+  saveTimer = setTimeout(saveChat, 400);
+}
+
+function storedMessages(list) {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  for (const item of list) {
+    if (!item || (item.role !== "user" && item.role !== "assistant")) continue;
+    if (typeof item.content !== "string") continue;
+    if (item.role === "user") {
+      if (!item.content) continue;
+      out.push({ role: "user", content: item.content });
+      continue;
+    }
+    const msg = {
+      role: "assistant",
+      content: item.content,
+      model: typeof item.model === "string" ? item.model : "",
+      thinking: typeof item.thinking === "string" ? item.thinking : "",
+      meta: typeof item.meta === "string" ? item.meta : "",
+      error: typeof item.error === "string" ? item.error : ""
+    };
+    if (!msg.content && !msg.thinking && !msg.meta && !msg.error) continue;
+    out.push(msg);
+  }
+  return out;
+}
+
+function restoreChat() {
+  let data = null;
+  try {
+    data = JSON.parse(localStorage.getItem("ollama-chat") || "null");
+  } catch (err) {
+    data = null;
+  }
+  if (!data || typeof data !== "object") return;
+  const times = data.lastTimes;
+  if (times && typeof times === "object") {
+    for (const name of Object.keys(times)) {
+      if (typeof times[name] === "string") lastTimes[name] = times[name];
+    }
+    renderCompare();
+  }
+  if (typeof data.model === "string") savedModel = data.model;
+  if (typeof data.activeId === "string") activeId = data.activeId;
+  const limit = Number(data.contextLimit);
+  if (limit > 0) contextLimit = limit;
+  const kept = storedMessages(data.messages);
+  if (!kept.length) {
+    activeId = "";
+    savedFingerprint = "[]";
+    return;
+  }
+  messages.push(...kept);
+  contextUsed = Number(data.contextUsed) || 0;
+  if (typeof data.timer === "string" && data.timer.indexOf("answering") === -1) {
+    timerEl.textContent = data.timer;
+  }
+  const entry = history.find((item) => item.id === activeId);
+  if (!entry) activeId = "";
+  savedFingerprint = entry ? transcriptKeyFrom(storedMessages(entry.messages)) : "[]";
+  log.textContent = "";
+  for (const msg of messages) renderTurn(msg);
+  renderMeter();
+  followOutput = true;
+  scrollPageToEnd();
+}
+
+function transcriptKeyFrom(list) {
+  return JSON.stringify(list.map((msg) => [msg.role, msg.content || "", msg.thinking || ""]));
+}
+
+function transcriptKey() {
+  return transcriptKeyFrom(messages);
+}
+
+function chatDirty() {
+  return messages.length > 0 && transcriptKey() !== savedFingerprint;
+}
+
+function suggestName(list) {
+  const first = (list || []).find((msg) => msg.role === "user" && msg.content);
+  const text = (first ? first.content : "").replace(/\s+/g, " ").trim();
+  if (!text) return "Saved chat";
+  let name = text.split(" ").slice(0, 5).join(" ");
+  name = name.replace(/[.,:;!?]+$/g, "");
+  if (name.length > 48) name = name.slice(0, 48).trim();
+  return name || "Saved chat";
+}
+
+function chosenName() {
+  const typed = saveName.value.replace(/\s+/g, " ").trim();
+  const name = typed.split(" ").filter(Boolean).slice(0, 6).join(" ").slice(0, 48).trim();
+  return name || suggestName(messages);
+}
+
+function loadHistory() {
+  let raw = [];
+  try {
+    raw = JSON.parse(localStorage.getItem("ollama-chat-history") || "[]");
+  } catch (err) {
+    raw = [];
+  }
+  history = [];
+  if (!Array.isArray(raw)) return;
+  for (const item of raw) {
+    if (!item || typeof item.id !== "string" || typeof item.name !== "string") continue;
+    const kept = storedMessages(item.messages);
+    if (!kept.length) continue;
+    history.push({
+      id: item.id,
+      name: item.name.replace(/\s+/g, " ").trim().slice(0, 48) || "Saved chat",
+      savedAt: Number(item.savedAt) || Date.now(),
+      messages: kept,
+      contextUsed: Number(item.contextUsed) || 0,
+      contextLimit: Number(item.contextLimit) || 0,
+      model: typeof item.model === "string" ? item.model : ""
+    });
+  }
+}
+
+function saveHistory() {
+  try {
+    localStorage.setItem("ollama-chat-history", JSON.stringify(history));
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function renderHistory() {
+  historyList.textContent = "";
+  historyEmpty.hidden = history.length > 0;
+  for (const item of history) {
+    const li = document.createElement("li");
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "history-open" + (item.id === activeId ? " current" : "");
+    const nameEl = document.createElement("span");
+    nameEl.className = "history-name";
+    nameEl.textContent = item.name;
+    const when = document.createElement("span");
+    when.className = "history-when";
+    when.textContent = new Date(item.savedAt).toLocaleString(undefined, {
+      day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+    });
+    open.append(nameEl, when);
+    open.addEventListener("click", () => {
+      if (!saveDialog.hidden || item.id === activeId) return;
+      askToLeave(() => openSaved(item.id));
+    });
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "history-delete";
+    del.textContent = "Delete";
+    del.setAttribute("aria-label", "Delete " + item.name);
+    del.addEventListener("click", () => removeSaved(item.id));
+    li.append(open, del);
+    historyList.appendChild(li);
+  }
+}
+
+function storeCurrent() {
+  const kept = storedMessages(messages);
+  if (!kept.length) return true;
+  const id = activeId || ("c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+  const entry = {
+    id: id,
+    name: chosenName(),
+    savedAt: Date.now(),
+    messages: kept,
+    contextUsed: contextUsed,
+    contextLimit: contextLimit,
+    model: modelSelect.value || savedModel
+  };
+  const previous = history;
+  history = [entry].concat(history.filter((item) => item.id !== id));
+  if (!saveHistory()) {
+    history = previous;
+    return false;
+  }
+  activeId = id;
+  savedFingerprint = transcriptKey();
+  renderHistory();
+  return true;
+}
+
+function stopReply() {
+  chatGen++;
+  if (controller) controller.abort();
+  send.textContent = "Send";
+  if (timerEl.textContent.indexOf("answering") !== -1) timerEl.textContent = "Ready";
+}
+
+function showTranscript() {
+  log.textContent = "";
+  if (!messages.length) {
+    log.innerHTML = '<p class="note">New chat. Earlier messages are no longer sent with the next question.</p>';
+    return;
+  }
+  for (const msg of messages) renderTurn(msg);
+}
+
+function startFresh() {
+  stopReply();
+  activeId = "";
+  savedFingerprint = "[]";
+  messages.length = 0;
+  contextUsed = 0;
+  renderMeter();
+  showTranscript();
+  renderHistory();
+  saveChat();
+  text.focus({ preventScroll: true });
+}
+
+function openSaved(id) {
+  const entry = history.find((item) => item.id === id);
+  if (!entry) return;
+  stopReply();
+  messages.length = 0;
+  messages.push(...storedMessages(entry.messages));
+  activeId = entry.id;
+  savedFingerprint = transcriptKey();
+  contextUsed = Number(entry.contextUsed) || 0;
+  if (Number(entry.contextLimit) > 0) contextLimit = Number(entry.contextLimit);
+  if (entry.model) savedModel = entry.model;
+  if (entry.model && [...modelSelect.options].some((opt) => opt.value === entry.model)) {
+    modelSelect.value = entry.model;
+  }
+  timerEl.textContent = "Ready";
+  showTranscript();
+  renderMeter();
+  renderHistory();
+  saveChat();
+  followOutput = true;
+  scrollPageToEnd();
+  text.focus({ preventScroll: true });
+}
+
+function removeSaved(id) {
+  if (!saveDialog.hidden) return;
+  const previous = history;
+  history = history.filter((item) => item.id !== id);
+  if (!saveHistory()) {
+    history = previous;
+    return;
+  }
+  if (activeId === id) {
+    activeId = "";
+    savedFingerprint = "[]";
+    saveChat();
+  }
+  renderHistory();
+}
+
+function askToLeave(next) {
+  if (!chatDirty()) {
+    next();
+    return;
+  }
+  pendingLeave = next;
+  const existing = history.find((item) => item.id === activeId);
+  saveLead.textContent = existing
+    ? "Save changes to this chat? Don't save keeps the earlier copy."
+    : "Save this chat so you can open it later?";
+  saveName.value = existing ? existing.name : suggestName(messages);
+  saveDialog.hidden = false;
+  saveName.focus();
+  saveName.select();
+}
+
+function cancelLeave() {
+  pendingLeave = null;
+  saveDialog.hidden = true;
+  text.focus({ preventScroll: true });
+}
+
+function finishLeave(save) {
+  const next = pendingLeave;
+  pendingLeave = null;
+  saveDialog.hidden = true;
+  stopReply();
+  if (save && !storeCurrent()) {
+    pendingLeave = next;
+    saveLead.textContent = "This browser could not store the chat. It is still on screen.";
+    saveDialog.hidden = false;
+    saveName.focus();
+    return;
+  }
+  if (next) next();
+}
+
+function renderTurn(msg) {
+  if (msg.role === "user") {
+    const userBody = addArticle("You", "user");
+    userBody.innerHTML = renderMarkdown(msg.content || "");
+    return { body: userBody };
+  }
+  const body = addArticle(msg.model || "Model");
+  const thinkEl = document.createElement("details");
+  thinkEl.className = "think";
+  thinkEl.open = true;
+  thinkEl.innerHTML = '<summary>Thinking</summary><div class="think-body"></div>';
+  const thinkBody = thinkEl.querySelector(".think-body");
+  const answerEl = document.createElement("div");
+  answerEl.className = "answer";
+  body.append(thinkEl, answerEl);
+  if (msg.thinking) thinkBody.textContent = msg.thinking;
+  else thinkEl.hidden = true;
+  if (msg.content) answerEl.innerHTML = renderMarkdown(msg.content);
+  if (msg.error) {
+    const err = document.createElement("p");
+    err.className = "err";
+    err.textContent = msg.error;
+    body.appendChild(err);
+  }
+  if (msg.meta) {
+    const meta = document.createElement("p");
+    meta.className = "meta";
+    meta.textContent = msg.meta;
+    body.appendChild(meta);
+  }
+  return { body: body, thinkEl: thinkEl, thinkBody: thinkBody, answerEl: answerEl };
 }
 
 function formatDuration(ms) {
@@ -373,6 +1182,7 @@ async function loadModels() {
     if (name === prefer) opt.selected = true;
     modelSelect.appendChild(opt);
   }
+  if (savedModel && names.includes(savedModel)) modelSelect.value = savedModel;
   if (!names.length) {
     const opt = document.createElement("option");
     opt.textContent = "No models installed";
@@ -397,19 +1207,14 @@ async function ask(prompt) {
   const gen = chatGen;
   const modelName = modelSelect.value;
   messages.push({ role: "user", content: prompt });
-  const userBody = addArticle("You", "user");
-  userBody.innerHTML = renderMarkdown(prompt);
+  renderTurn(messages[messages.length - 1]);
+  saveChat();
 
-  const body = addArticle(modelName);
-  const thinkEl = document.createElement("details");
-  thinkEl.className = "think";
-  thinkEl.open = true;
-  thinkEl.innerHTML = '<summary>Thinking</summary><div class="think-body"></div>';
-  const thinkBody = thinkEl.querySelector(".think-body");
-  const answerEl = document.createElement("div");
-  answerEl.className = "answer";
-  body.append(thinkEl, answerEl);
-  thinkEl.hidden = true;
+  const view = renderTurn({ role: "assistant", content: "", model: modelName, thinking: "", meta: "", error: "" });
+  const body = view.body;
+  const thinkEl = view.thinkEl;
+  const thinkBody = view.thinkBody;
+  const answerEl = view.answerEl;
 
   send.textContent = "Stop";
   controller = new AbortController();
@@ -420,8 +1225,14 @@ async function ask(prompt) {
   let answer = "";
   let stats = null;
   let status = "done";
+  let live = null;
   let followThink = true;
   let scrollFromThink = false;
+  const ensureLive = () => {
+    if (live) return;
+    live = { role: "assistant", content: "", model: modelName, thinking: "", meta: "", error: "" };
+    messages.push(live);
+  };
   thinkBody.addEventListener("wheel", (event) => {
     if (event.deltaY < 0) followThink = false;
   }, { passive: true });
@@ -431,7 +1242,7 @@ async function ask(prompt) {
     followThink = gap < 24;
   }, { passive: true });
   const applyLine = (line) => {
-    if (!line.trim()) return;
+    if (gen !== chatGen || !line.trim()) return;
     const msg = JSON.parse(line);
     if (msg.error) throw new Error(msg.error);
     const part = msg.message || {};
@@ -451,6 +1262,12 @@ async function ask(prompt) {
       answerEl.innerHTML = renderMarkdown(answer);
       scrollPageToEnd();
     }
+    if (part.thinking || part.content) {
+      ensureLive();
+      live.thinking = thinking;
+      live.content = answer;
+      saveChatSoon();
+    }
     const next = takeStats(msg);
     if (next) stats = next;
   };
@@ -461,8 +1278,8 @@ async function ask(prompt) {
       signal: controller.signal,
       body: JSON.stringify({
         model: modelName,
-        messages: messages,
-        stream: true,
+        messages: chatPayload(),
+        stream: streamingBox.checked,
         think: thinkingBox.checked
       })
     });
@@ -480,17 +1297,27 @@ async function ask(prompt) {
     }
     buf += decoder.decode();
     if (buf.trim()) applyLine(buf);
-    messages.push({ role: "assistant", content: answer });
+    if (gen !== chatGen) return;
+    ensureLive();
+    live.content = answer;
+    live.thinking = thinking;
   } catch (err) {
     status = err.name === "AbortError" ? "stopped" : "error";
+    if (gen !== chatGen) return;
     if (status === "error") {
       const p = document.createElement("p");
       p.className = "err";
       p.textContent = err.message || String(err);
       body.appendChild(p);
     }
-    if (answer) messages.push({ role: "assistant", content: answer });
-    else messages.pop();
+    if (answer || thinking) {
+      ensureLive();
+      live.content = answer;
+      live.thinking = thinking;
+      if (status === "error") live.error = err.message || String(err);
+    } else {
+      messages.pop();
+    }
   } finally {
     const elapsed = stopTimer();
     send.textContent = "Send";
@@ -513,7 +1340,7 @@ async function ask(prompt) {
       lastTimes[modelName] = timeText;
       renderCompare();
     }
-    if (status !== "stopped" || stats) {
+    if ((status !== "stopped" || stats) && live) {
       const meta = document.createElement("p");
       meta.className = "meta";
       if (stats) {
@@ -527,9 +1354,11 @@ async function ask(prompt) {
       } else {
         meta.textContent = modelName + " · " + timeText;
       }
+      live.meta = meta.textContent;
       body.appendChild(meta);
       scrollPageToEnd();
     }
+    saveChat();
   }
 }
 
@@ -552,19 +1381,65 @@ text.addEventListener("keydown", (ev) => {
   }
 });
 
-document.getElementById("clear").addEventListener("click", () => {
-  const wasRunning = !!controller;
-  chatGen++;
-  if (controller) controller.abort();
-  messages.length = 0;
-  contextUsed = 0;
-  renderMeter();
-  if (wasRunning) timerEl.textContent = "Ready";
-  log.innerHTML = '<p class="note">New chat. Earlier messages are no longer sent with the next question.</p>';
-  text.focus({ preventScroll: true });
+log.addEventListener("click", (event) => {
+  const button = event.target.closest(".copy-code");
+  if (!button || !log.contains(button)) return;
+  const code = button.parentElement.querySelector("code");
+  if (!code) return;
+  const value = code.textContent;
+  const mark = () => {
+    button.textContent = "Copied";
+    button.classList.add("done");
+    setTimeout(() => {
+      if (!button.isConnected) return;
+      button.textContent = "Copy";
+      button.classList.remove("done");
+    }, 1500);
+  };
+  const fallback = () => {
+    const area = document.createElement("textarea");
+    area.value = value;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.left = "-9999px";
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(value).then(mark).catch(() => { fallback(); mark(); });
+  } else {
+    fallback();
+    mark();
+  }
 });
 
+document.getElementById("clear").addEventListener("click", () => {
+  if (!saveDialog.hidden) return;
+  askToLeave(startFresh);
+});
+
+document.getElementById("save-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  finishLeave(true);
+});
+document.getElementById("save-skip").addEventListener("click", () => finishLeave(false));
+document.getElementById("save-cancel").addEventListener("click", cancelLeave);
+saveDialog.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape") {
+    ev.preventDefault();
+    cancelLeave();
+  }
+});
+
+modelSelect.addEventListener("change", saveChat);
+
+loadHistory();
 renderMeter();
+restoreChat();
+renderHistory();
+window.addEventListener("pagehide", saveChat);
 loadContextLimit();
 loadModels().catch((err) => {
   log.insertAdjacentHTML("beforeend", '<p class="err"></p>');
